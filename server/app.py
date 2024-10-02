@@ -1,39 +1,27 @@
-from flask import Flask, jsonify, current_app
+# server/app.py
+
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from models import db, Earthquake
+from flask_migrate import Migrate
 
-# Initialize the Flask application
-app = Flask(__name__)
+db = SQLAlchemy()
+migrate = Migrate()
 
-# Configure the database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+def create_app():
+    app = Flask(__name__)
 
-# Initialize the database
-db.init_app(app)
+    # Configure the app
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Create the database tables if they don't exist
-with app.app_context():
-    db.create_all()
+    # Initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
 
-# Route to get an earthquake by ID
-@app.route('/earthquakes/<int:id>', methods=['GET'])
-def get_earthquake(id):
-    with current_app.app_context():
-        earthquake = db.session.get(Earthquake, id)
-    if earthquake:
-        return jsonify(earthquake.serialize()), 200
-    else:
-        return jsonify({"message": f"Earthquake {id} not found."}), 404
+    with app.app_context():
+        from models import Earthquake  # Ensure your models are imported here
+        db.create_all()  # Create tables if not already created
 
-# Route to get earthquakes by minimum magnitude
-@app.route('/earthquakes/magnitude/<float:magnitude>', methods=['GET'])
-def get_earthquakes_by_magnitude(magnitude):
-    quakes = Earthquake.query.filter(Earthquake.magnitude >= magnitude).all()
-    return jsonify({
-        "count": len(quakes),
-        "quakes": [quake.serialize() for quake in quakes]
-    }), 200
+    return app
 
-# Run the application
-if __name__ == '__main__':
-    app.run(port=5555)
+app = create_app()
