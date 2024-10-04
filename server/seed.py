@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 # server/seed.py
 
-from app import app
-from models import db, Earthquake
+# seed.py
+from models import db, Pet
+from faker import Faker
 
-with app.app_context():
+fake = Faker()
 
-    # Delete all rows in the "earthquakes" table
-    Earthquake.query.delete()
-
-    # Add several Earthquake instances to the "earthquakes" table
-    db.session.add(Earthquake(magnitude=9.5, location="Chile", year=1960))
-    db.session.add(Earthquake(magnitude=9.2, location="Alaska", year=1964))
-    db.session.add(Earthquake(magnitude=8.6, location="Alaska", year=1946))
-    db.session.add(Earthquake(magnitude=8.5, location="Banda Sea", year=1934))
-    db.session.add(Earthquake(magnitude=8.4, location="Chile", year=1922))
-
-    # Commit the transaction
+def seed_pets(num_pets=10):
+    for _ in range(num_pets):
+        pet = Pet(
+            name=fake.first_name(),
+            species=fake.random_element(elements=('Dog', 'Cat', 'Hamster', 'Turtle', 'Chicken'))
+        )
+        db.session.add(pet)
     db.session.commit()
+
+if __name__ == '__main__':
+    from app import app
+    with app.app_context():
+        db.create_all()  # Ensure tables are created
+        seed_pets()  # Call the seeding function
+

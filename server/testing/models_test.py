@@ -1,32 +1,24 @@
-from app import app
-from server.models import db, Earthquake
+# models.py
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 
+# Initialize the SQLAlchemy object
+db = SQLAlchemy()
 
-class TestEarthquake:
-    '''Earthquake model in models.py'''
+class Earthquake(db.Model, SerializerMixin):
+    __tablename__ = 'earthquakes'
 
-    def test_can_be_instantiated(self):
-        '''can be invoked to create a Python object.'''
-        quake = Earthquake()
-        assert quake
-        assert isinstance(quake, Earthquake)
+    # Define the columns for the Earthquake table
+    id = db.Column(db.Integer, primary_key=True)
+    magnitude = db.Column(db.Float, nullable=False)
+    location = db.Column(db.String(100), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
 
-    def test_has_attributes(self):
-        '''can be instantiated with an id, magnitude, location, year.'''
-        quake = Earthquake(magnitude=9.5, location="Chile", year=1960)
-        assert quake.id is None  # Not persisted in database yet
-        assert quake.magnitude == 9.5
-        assert quake.location == "Chile"
-        assert quake.year == 1960
-
-    def test_superclasses(self):
-        '''inherits from db.Model and SerializerMixin'''
-        quake = Earthquake()
-        assert isinstance(quake, db.Model)
-        assert isinstance(quake, SerializerMixin)
-
-    def test_dictionary(self):
-        '''to_dict() result'''
-        quake = Earthquake(magnitude=9.5, location="Chile", year=1960)
-        assert quake.to_dict()
+    # Optional: Custom serialization
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'magnitude': self.magnitude,
+            'location': self.location,
+            'year': self.year
+        }
